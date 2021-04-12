@@ -11,6 +11,7 @@ fbuild-linux
 tmp/
 ftmp/
 bin/
+.vs/
 profile.json
 
 # Temp files

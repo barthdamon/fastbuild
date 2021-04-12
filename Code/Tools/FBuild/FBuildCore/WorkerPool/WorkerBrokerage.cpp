@@ -25,6 +25,48 @@
 #include "Core/Process/Thread.h"
 #include "Core/Time/Time.h"
 
+
+#if defined( __APPLE__ )
+
+#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+static bool ConvertHostNameToLocalIP4( AString& hostName )
+{
+    bool result = false;
+
+    struct ifaddrs * allIfAddrs;
+    if ( getifaddrs( &allIfAddrs ) == 0 )
+    {
+        struct ifaddrs * addr = allIfAddrs;
+        char ipString[48] = { 0 };
+        while ( addr )
+        {
+            if ( addr->ifa_addr )
+            {
+                if ( addr->ifa_addr->sa_family == AF_INET && strcmp( addr->ifa_name, "en0" ) == 0 )
+                {
+                    struct sockaddr_in * sockaddr = ( struct sockaddr_in * ) addr->ifa_addr;
+                    inet_ntop( AF_INET, &sockaddr->sin_addr, ipString, sizeof( ipString ) );
+                    hostName = ipString;
+                    result = true;
+                    break;
+                }
+            }
+            addr = addr->ifa_next;
+        }
+
+        freeifaddrs( allIfAddrs );
+    }
+
+    return result;
+}
+
+#endif // __APPLE__
+
 // Constants
 //------------------------------------------------------------------------------
 static const float sBrokerageElapsedTimeBetweenClean = ( 12 * 60 * 60.0f );
@@ -109,6 +151,10 @@ void WorkerBrokerage::InitBrokerage()
     }
 
     Network::GetHostName( m_HostName );
+
+#if defined( __APPLE__ )
+	ConvertHostNameToLocalIP4(m_HostName);
+#endif
 
     UpdateBrokerageFilePath();
 
