@@ -538,7 +538,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
     if ( job->IsLocal() )
     {
 		if (IsClang() ||
-			IsClangCl() || )
+			IsClangCl() )
         {
             usePreProcessedOutput = false;
         }
@@ -1702,16 +1702,6 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             continue;
         }
 
-        // Remove dependency file generation so it's only performed on local system
-        if ( StripToken( "-MD", token ) )
-        {
-            continue; // skip this token in both cases
-        }
-        if ( StripTokenWithArg( "-MF", token, i ) )
-        {
-            continue; // skip this token in both cases
-        }
-
         // Handle build-time substitutions
         if ( driver->ProcessArg_BuildTimeSubstitution( token, i, fullArgs ) )
         {
@@ -1734,41 +1724,6 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
     {
         fullArgs += " /showIncludes"; // we'll extract dependency information from this
     }
-
-	// %5 -> FirstExtraFile
-	found = token.Find("%5");
-	if (found)
-	{
-		AStackString<> extraFile;
-		if (job->IsLocal() == false)
-		{
-			job->GetToolManifest()->GetRemoteFilePath(1, extraFile);
-		}
-
-		fullArgs += AStackString<>(token.Get(), found);
-		fullArgs += job->IsLocal() ? GetCompiler()->GetExtraFile(0) : extraFile;
-		fullArgs += AStackString<>(found + 2, token.GetEnd());
-		fullArgs.AddDelimiter();
-		continue;
-	}
-
-	// %CLFilterDependenciesOutput -> file name Unreal Engine's cl-filter -dependencies param
-	// MSVC's /showIncludes option doesn't output anything when compiling a preprocessed file,
-	// so in that case we change the file name so that it doesn't override the file generated
-	// during preprocessing pass.
-	found = token.Find("%CLFilterDependenciesOutput");
-	if (found)
-	{
-		AString nameWithoutExtension(m_Name);
-		PathUtils::StripFileExtension(nameWithoutExtension);
-
-		fullArgs += AStackString<>(token.Get(), found);
-		fullArgs += nameWithoutExtension;
-		fullArgs += pass == PASS_COMPILE_PREPROCESSED ? ".empty" : ".txt";
-		fullArgs += AStackString<>(found + 27, token.GetEnd());
-		fullArgs.AddDelimiter();
-		continue;
-	}
 
     // Skip finalization?
     if ( finalize == false )

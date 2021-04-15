@@ -608,6 +608,7 @@ void IdleDetection::UpdateProcessList()
         outProcessInfoString.Clear();
         return false;
     }
+#endif
 
 // ConvertTimeString
 //------------------------------------------------------------------------------
