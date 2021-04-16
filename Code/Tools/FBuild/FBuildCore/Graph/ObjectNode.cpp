@@ -1708,7 +1708,8 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
             continue;
         }
 
-		// %5 -> FirstExtraFile
+        // <RGI> Primary Epic modifications (besides MacOS support)
+		// %5 -> FirstExtraFile to pass cl-filter the remote path of cl.exe
 		const char* found = token.Find("%5");
 		if (found)
 		{
@@ -1742,6 +1743,7 @@ bool ObjectNode::BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool us
 			fullArgs.AddDelimiter();
 			continue;
 		}
+        // </RGI>
 
         // untouched token
         fullArgs += token;
